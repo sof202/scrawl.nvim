@@ -27,7 +27,7 @@ local function binary_location()
 end
 
 function M.setup()
-    if binary_location() then
+    if not binary_location() then
         vim.notify("scrawl not found", vim.log.levels.INFO)
         local ok, err = pcall(
             download.download_binary_from_github,
