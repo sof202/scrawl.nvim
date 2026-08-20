@@ -36,8 +36,10 @@ function M.setup()
         )
         if not ok then
             vim.notify("scrawl.nvim: " .. tostring(err), vim.log.levels.ERROR)
+            return
         end
     end
+
     vim.api.nvim_create_autocmd("FileType", {
         pattern = "markdown",
         callback = function()
