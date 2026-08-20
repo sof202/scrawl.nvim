@@ -28,19 +28,31 @@ local function binary_location()
     return nil
 end
 
+-- Runs a system command and returns stdout, or errors with a message combining
+-- the given label and the command's stderr/exit code
+--- @param cmd string[]
+--- @param label string
+--- @return string stdout
+local function run(cmd, label)
+    local result = vim.fn.system(cmd)
+    if vim.v.shell_error ~= 0 then
+        error(string.format("%s (exit %d): %s", label, vim.v.shell_error, result))
+    end
+    return result
+end
+
 -- Use GitHub's REST API to obtain the most recent tag
 --- @return string tag
 local function get_latest_tag()
     local releases_url = scrawl_api_url .. "/releases/latest"
-    local curl_cmd = string.format("curl -sL '%s'", releases_url)
-    local handle = io.popen(curl_cmd)
-    if handle == nil then
-        error("Failed to obain latest tag")
-    end
-    local response = handle:read("*a")
-    handle:close()
-
+    local response = run(
+        { "curl", "-sL", releases_url },
+        "Failed to fetch latest release"
+    )
     local tag = response:match('"tag_name"%s*:%s*"(v%d+%.%d+%.%d+)"')
+    if not tag then
+        error("Failed to find tag_name in latest release response")
+    end
     return tag
 end
 
@@ -49,17 +61,10 @@ end
 --- @return string algorithm, string checksum
 local function get_checksum(tag)
     local tag_url = scrawl_api_url .. "/releases/tags/" .. tag
-
-    -- 1. Hit GitHub REST API
-    local curl_cmd = string.format("curl -sL '%s'", tag_url)
-    local handle = io.popen(curl_cmd)
-    if handle == nil then
-        error("Failed to obtain checksum")
-    end
-    local response = handle:read("*a")
-    handle:close()
-
-    -- 2. Extract digest from JSON response
+    local response = run(
+        { "curl", "-sL", tag_url },
+        "Failed to fetch release info for " .. tag
+    )
     local algorithm, checksum = response:match('"digest"%s*:%s*"(%w+):(%x+)"')
 
     if not checksum then
@@ -77,19 +82,24 @@ local function download_binary_from_github(tag)
 
     -- Note that only the glibc version is built currently
     local download_url = scrawl_repo_url .. "/releases/download/" .. tag .. "/" .. scrawl_tar
+    local download_location = plugin_binary_directory .. scrawl_tar
 
-    -- 1. Checksum valiation
-    local checksum_curl_cmd = string.format("curl -sL '%s' | sha256sum", download_url)
-    local handle = io.popen(checksum_curl_cmd)
-    if handle == nil then
-        error("curl: Failed to obtain checksum")
-    end
-    local output = handle:read("*a")
-    handle:close()
-    local actual_checksum = output:match("^([%x]+)")
+    -- 1. Download
+    vim.notify("Downloading:" .. scrawl_tar, vim.log.levels.INFO)
+    run(
+        { "curl", "-sL", "-o", download_location, download_url },
+        "Failed to download tar from " .. download_url
+    )
 
-    local _, expected_checksum = get_checksum(tag)
+    -- 2. Compare hashes
+    local checksum_output = run(
+        { "sha256sum", download_location },
+        "Failed to compute checksum on: " .. download_location
+    )
+    local actual_checksum = checksum_output:match("^(%x+)")
+    local expected_checksum = get_checksum(tag)
     if actual_checksum ~= expected_checksum then
+        os.remove(download_location)
         error(string.format(
             "Checksums do not match (expected %s, actual %s)",
             expected_checksum,
@@ -97,33 +107,14 @@ local function download_binary_from_github(tag)
         ))
     end
 
-    -- 1. Download
-    local download_location = plugin_binary_directory .. scrawl_tar
-    vim.notify("Downloading:" .. scrawl_tar, vim.log.levels.INFO)
-    local download_curl_cmd = string.format(
-        "curl -sL -o '%s' '%s'",
-        download_location,
-        download_url
+    -- 3. Extract
+    run(
+        { "tar", "-C", plugin_binary_directory, "-xzf", download_location },
+        "Failed to extract " .. download_location
     )
-    local success, _, _ = os.execute(download_curl_cmd)
-    if not success then
-        error("curl failed to download tar from " .. download_url)
-    end
 
-    -- 2. Extract
-    local tar_cmd = string.format(
-        "tar -C '%s' -xzf '%s'",
-        plugin_binary_directory,
-        download_location
-    )
-    os.execute(tar_cmd)
-
-    -- 3. Move files
-    local extracted_directory = download_location.gsub(
-        download_location,
-        ".tar.gz",
-        ""
-    )
+    -- 4. Move files
+    local extracted_directory = download_location:gsub("%.tar%.gz$", "")
     local files = vim.fn.globpath(extracted_directory, "*", false, true)
     for _, file in ipairs(files) do
         local filename = vim.fn.fnamemodify(file, ":t")
@@ -135,7 +126,8 @@ local function download_binary_from_github(tag)
 
     -- 4. Remove tar and directory
     os.remove(download_location)
-    os.remove(extracted_directory)
+    vim.fn.delete(extracted_directory, "rf")
+    vim.notify("Installed scrawl.", vim.log.levels.INFO)
 end
 
 function M.setup()
@@ -151,7 +143,6 @@ function M.setup()
         if not ok then
             vim.notify("scrawl.nvim: " .. tostring(err), vim.log.levels.ERROR)
         end
-        vim.notify("Installed scrawl.", vim.log.levels.INFO)
     end
 end
 
