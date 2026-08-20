@@ -1,7 +1,7 @@
 local M = {}
 
 --- @param binary_location string
-function M.execute_scrawl(binary_location)
+local function execute_scrawl(binary_location)
     -- Ensures that user cannot put some other type of file extension (scrawl
     -- explicitly makes png files). It also means it is quicker to type out the
     -- image name for the user.
@@ -22,6 +22,27 @@ function M.execute_scrawl(binary_location)
         false,
         -1
     )
+end
+
+function M.setup()
+    local config = require("scrawl.config")
+    local paths = require("scrawl.paths")
+
+    vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function()
+            local keymap = config.opts.keymaps.markdown_insert
+            if not keymap then
+                return -- disabled for whatever reason
+            end
+            vim.keymap.set("n", keymap, function()
+                local binary = paths.binary_location()
+                if binary then
+                    execute_scrawl(binary)
+                end
+            end, { buffer = true, noremap = true, silent = true })
+        end,
+    })
 end
 
 return M

@@ -3,7 +3,7 @@ local paths = require("scrawl.paths")
 
 local M = {}
 
-function M.setup()
+function M.setup(user_opts)
     if not paths.binary_location() then
         vim.notify("scrawl not found", vim.log.levels.INFO)
         local ok, err = pcall(
@@ -17,19 +17,8 @@ function M.setup()
         end
     end
 
-    vim.api.nvim_create_autocmd("FileType", {
-        pattern = "markdown",
-        callback = function()
-            local markdown = require("scrawl.markdown")
-            -- mi -> markdown insert
-            vim.keymap.set("n", "<leader>mi", function()
-                local binary = paths.binary_location()
-                if binary then
-                    markdown.execute_scrawl(binary)
-                end
-            end, { buffer = true, noremap = true, silent = true })
-        end,
-    })
+    require("scrawl.config").setup(user_opts)
+    require("scrawl.markdown").setup()
 end
 
 return M
