@@ -135,7 +135,10 @@ local function download_binary_from_github(tag)
 end
 
 function M.setup()
-    print("hi")
+    if not binary_location() then
+        vim.notify("scrawl not found", vim.log.levels.INFO)
+        download_binary_from_github("v0.1.2")
+    end
 end
 
 return M
