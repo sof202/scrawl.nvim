@@ -31,7 +31,7 @@ end
 -- Use GitHub's REST API to obtain the most recent tag
 --- @return string tag
 local function get_latest_tag()
-    local releases_url = scrawl_api_url .. "/releases"
+    local releases_url = scrawl_api_url .. "/releases/latest"
     local curl_cmd = string.format("curl -sL '%s'", releases_url)
     local handle = io.popen(curl_cmd)
     if handle == nil then
