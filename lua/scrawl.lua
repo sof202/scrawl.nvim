@@ -26,6 +26,27 @@ local function binary_location()
     return nil
 end
 
+-- Use GitHub's REST API to obtain the most recent tag
+--- @return string tag
+local function get_latest_tag()
+    local scrawl_api_url = "https://api.github.com/repos/" .. scrawl_repo
+    local releases_url = scrawl_api_url .. "/releases"
+
+    if vim.fn.executable("curl") == 0 then
+        error("curl is not on PATH. Couldn't download scrawl.")
+    end
+    local curl_cmd = string.format("curl -sL '%s'", releases_url)
+    local handle = io.popen(curl_cmd)
+    if handle == nil then
+        error("Failed to obain latest tag")
+    end
+    local response = handle:read("*a")
+    handle:close()
+
+    local tag = response:match('"tag_name"%s*:%s*"(v%d+%.%d+%.%d+)"')
+    return tag
+end
+
 -- Obtains checksum for scrawl tar from GitHub's REST API
 --- @param tag string
 --- @return string algorithm, string checksum
@@ -137,7 +158,7 @@ end
 function M.setup()
     if not binary_location() then
         vim.notify("scrawl not found", vim.log.levels.INFO)
-        download_binary_from_github("v0.1.2")
+        download_binary_from_github(get_latest_tag())
     end
 end
 
