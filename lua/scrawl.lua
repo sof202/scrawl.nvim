@@ -32,10 +32,6 @@ end
 --- @return string tag
 local function get_latest_tag()
     local releases_url = scrawl_api_url .. "/releases"
-
-    if vim.fn.executable("curl") == 0 then
-        error("curl is not on PATH. Couldn't download scrawl.")
-    end
     local curl_cmd = string.format("curl -sL '%s'", releases_url)
     local handle = io.popen(curl_cmd)
     if handle == nil then
@@ -55,9 +51,6 @@ local function get_checksum(tag)
     local tag_url = scrawl_api_url .. "/releases/tags/" .. tag
 
     -- 1. Hit GitHub REST API
-    if vim.fn.executable("curl") == 0 then
-        error("curl is not on PATH. Couldn't download scrawl.")
-    end
     local curl_cmd = string.format("curl -sL '%s'", tag_url)
     local handle = io.popen(curl_cmd)
     if handle == nil then
@@ -86,9 +79,6 @@ local function download_binary_from_github(tag)
     local download_url = scrawl_repo_url .. "/releases/download/" .. tag .. "/" .. scrawl_tar
 
     -- 1. Checksum valiation
-    if vim.fn.executable("curl") == 0 then
-        error("curl is not on PATH. Couldn't download scrawl.")
-    end
     local checksum_curl_cmd = string.format("curl -sL '%s' | sha256sum", download_url)
     local handle = io.popen(checksum_curl_cmd)
     if handle == nil then
@@ -121,10 +111,6 @@ local function download_binary_from_github(tag)
     end
 
     -- 2. Extract
-    if vim.fn.executable("tar") == 0 then
-        error("tar is not on PATH. Couldn't extract scrawl.")
-    end
-
     local tar_cmd = string.format(
         "tar -C '%s' -xzf '%s'",
         plugin_binary_directory,
@@ -157,6 +143,12 @@ end
 function M.setup()
     if not binary_location() then
         vim.notify("scrawl not found", vim.log.levels.INFO)
+        if vim.fn.executable("curl") == 0 then
+            error("curl is not on PATH. Couldn't download scrawl.")
+        end
+        if vim.fn.executable("tar") == 0 then
+            error("tar is not on PATH. Couldn't extract scrawl.")
+        end
         download_binary_from_github(get_latest_tag())
     end
 end
