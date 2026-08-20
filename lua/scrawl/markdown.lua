@@ -19,7 +19,7 @@ local function execute_scrawl(binary_location)
     vim.fn.system({ binary_location, picture_path })
 
     -- Pressing ESC in scrawl results in no image being saved
-    if vim.fn.exists(picture_path) == 1 then
+    if vim.fn.filereadable(picture_path) == 1 then
         vim.api.nvim_paste(
             string.format("![%s](%s)", alt_text, picture_path),
             false,
