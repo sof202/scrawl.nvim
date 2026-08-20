@@ -130,7 +130,7 @@ local function download_binary_from_github(tag)
     local files = vim.fn.globpath(extracted_directory, "*", false, true)
     for _, file in ipairs(files) do
         local filename = vim.fn.fnamemodify(file, ":t")
-        local new_path = plugin_binary_directory .. "/" .. filename
+        local new_path = plugin_binary_directory .. filename
         if vim.fn.isdirectory(file) == 0 then
             os.rename(file, new_path)
         end
