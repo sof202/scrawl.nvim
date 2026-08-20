@@ -38,6 +38,16 @@ function M.setup()
             vim.notify("scrawl.nvim: " .. tostring(err), vim.log.levels.ERROR)
         end
     end
+    vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function()
+            local markdown = require("scrawl.markdown")
+            -- mi -> markdown insert
+            vim.keymap.set("n", "<leader>mi", function()
+                markdown.execute_scrawl()
+            end, { buffer = true, noremap = true, silent = true })
+        end,
+    })
 end
 
 return M
