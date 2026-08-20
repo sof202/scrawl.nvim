@@ -21,5 +21,15 @@ such, I'm not going to provide how to use packer or lazy.nvim (*etc.*).
 vim.pack.add({
     { src = "https://github.com/sof202/scrawl.nvim" },
 })
-require("scrawl").setup({})
+require("scrawl").setup()
+```
+
+## Configuration
+
+```lua
+require("scrawl").setup({
+  keymaps = {
+    markdown_insert = "<leader>mi"
+  }
+})
 ```
