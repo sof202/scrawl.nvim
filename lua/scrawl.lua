@@ -28,6 +28,17 @@ local function binary_location()
     return nil
 end
 
+-- Both tar and curl are required to download the scrawl binary from the GitHub
+-- releases page
+local function check_download_dependencies()
+    if vim.fn.executable("curl") == 0 then
+        error("curl is not on PATH. Couldn't download scrawl.")
+    end
+    if vim.fn.executable("tar") == 0 then
+        error("tar is not on PATH. Couldn't extract scrawl.")
+    end
+end
+
 -- Runs a system command and returns stdout, or errors with a message combining
 -- the given label and the command's stderr/exit code
 --- @param cmd string[]
@@ -78,6 +89,7 @@ end
 -- into scrawl.nvim's managed binary path
 --- @param tag string
 local function download_binary_from_github(tag)
+    check_download_dependencies()
     vim.fn.mkdir(plugin_binary_directory, "p")
 
     -- Note that only the glibc version is built currently
@@ -133,12 +145,6 @@ end
 function M.setup()
     if not binary_location() then
         vim.notify("scrawl not found", vim.log.levels.INFO)
-        if vim.fn.executable("curl") == 0 then
-            vim.notify("curl is not on PATH. Couldn't download scrawl.", vim.log.levels.ERROR)
-        end
-        if vim.fn.executable("tar") == 0 then
-            vim.notify("tar is not on PATH. Couldn't extract scrawl.", vim.log.levels.ERROR)
-        end
         local ok, err = pcall(download_binary_from_github, get_latest_tag())
         if not ok then
             vim.notify("scrawl.nvim: " .. tostring(err), vim.log.levels.ERROR)
