@@ -1,6 +1,8 @@
 local plugin_name = "scrawl.nvim"
 local scrawl_repo = "sof202/scrawl"
 local scrawl_tar = "scrawl-linux-glibc-x86_64.tar.gz"
+local scrawl_repo_url = "https://github.com/" .. scrawl_repo
+local scrawl_api_url = "https://api.github.com/repos/" .. scrawl_repo
 local plugin_binary_directory = vim.fn.stdpath("data") .. "/" .. plugin_name .. "/bin/"
 local M = {}
 
@@ -29,7 +31,6 @@ end
 -- Use GitHub's REST API to obtain the most recent tag
 --- @return string tag
 local function get_latest_tag()
-    local scrawl_api_url = "https://api.github.com/repos/" .. scrawl_repo
     local releases_url = scrawl_api_url .. "/releases"
 
     if vim.fn.executable("curl") == 0 then
@@ -51,14 +52,13 @@ end
 --- @param tag string
 --- @return string algorithm, string checksum
 local function get_checksum(tag)
-    local scrawl_api_url = "https://api.github.com/repos/" .. scrawl_repo
-    local release_url = scrawl_api_url .. "/releases/tags/" .. tag
+    local tag_url = scrawl_api_url .. "/releases/tags/" .. tag
 
     -- 1. Hit GitHub REST API
     if vim.fn.executable("curl") == 0 then
         error("curl is not on PATH. Couldn't download scrawl.")
     end
-    local curl_cmd = string.format("curl -sL '%s'", release_url)
+    local curl_cmd = string.format("curl -sL '%s'", tag_url)
     local handle = io.popen(curl_cmd)
     if handle == nil then
         error("Failed to obtain checksum")
@@ -83,7 +83,6 @@ local function download_binary_from_github(tag)
     vim.fn.mkdir(plugin_binary_directory, "p")
 
     -- Note that only the glibc version is built currently
-    local scrawl_repo_url = "https://github.com/" .. scrawl_repo
     local download_url = scrawl_repo_url .. "/releases/download/" .. tag .. "/" .. scrawl_tar
 
     -- 1. Checksum valiation
