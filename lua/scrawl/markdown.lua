@@ -17,11 +17,15 @@ local function execute_scrawl(binary_location)
     local alt_text = vim.fn.fnamemodify(picture_path, ":t")
 
     vim.fn.system({ binary_location, picture_path })
-    vim.api.nvim_paste(
-        string.format("![%s](%s)", alt_text, picture_path),
-        false,
-        -1
-    )
+
+    -- Pressing ESC in scrawl results in no image being saved
+    if vim.fn.exists(picture_path) then
+        vim.api.nvim_paste(
+            string.format("![%s](%s)", alt_text, picture_path),
+            false,
+            -1
+        )
+    end
 end
 
 function M.setup()
