@@ -46,7 +46,10 @@ function M.setup()
             local markdown = require("scrawl.markdown")
             -- mi -> markdown insert
             vim.keymap.set("n", "<leader>mi", function()
-                markdown.execute_scrawl(binary_location())
+                local binary = binary_location()
+                if binary then
+                    markdown.execute_scrawl(binary)
+                end
             end, { buffer = true, noremap = true, silent = true })
         end,
     })
