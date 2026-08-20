@@ -136,20 +136,22 @@ local function download_binary_from_github(tag)
     -- 4. Remove tar and directory
     os.remove(download_location)
     os.remove(extracted_directory)
-
-    vim.notify("Installed scrawl.", vim.log.levels.INFO)
 end
 
 function M.setup()
     if not binary_location() then
         vim.notify("scrawl not found", vim.log.levels.INFO)
         if vim.fn.executable("curl") == 0 then
-            error("curl is not on PATH. Couldn't download scrawl.")
+            vim.notify("curl is not on PATH. Couldn't download scrawl.", vim.log.levels.ERROR)
         end
         if vim.fn.executable("tar") == 0 then
-            error("tar is not on PATH. Couldn't extract scrawl.")
+            vim.notify("tar is not on PATH. Couldn't extract scrawl.", vim.log.levels.ERROR)
         end
-        download_binary_from_github(get_latest_tag())
+        local ok, err = pcall(download_binary_from_github, get_latest_tag())
+        if not ok then
+            vim.notify("scrawl.nvim: " .. tostring(err), vim.log.levels.ERROR)
+        end
+        vim.notify("Installed scrawl.", vim.log.levels.INFO)
     end
 end
 
