@@ -1,6 +1,7 @@
 local M = {}
 
-function M.execute_scrawl()
+--- @param binary_location string
+function M.execute_scrawl(binary_location)
     -- Ensures that user cannot put some other type of file extension (scrawl
     -- explicitly makes png files). It also means it is quicker to type out the
     -- image name for the user.
@@ -15,7 +16,7 @@ function M.execute_scrawl()
 
     local alt_text = vim.fn.fnamemodify(picture_path, ":t")
 
-    vim.fn.system({ "scrawl", picture_path })
+    vim.fn.system({ binary_location, picture_path })
     vim.api.nvim_paste(
         string.format("![%s](%s)", alt_text, picture_path),
         false,
