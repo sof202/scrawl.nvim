@@ -46,20 +46,20 @@ end
 
 -- Obtains checksum for scrawl tar from GitHub's REST API
 --- @param tag string
---- @return string algorithm, string checksum
+--- @return string checksum
 local function get_checksum(tag)
     local tag_url = scrawl_api_url .. "/releases/tags/" .. tag
     local response = run(
         { "curl", "-sL", tag_url },
         "Failed to fetch release info for " .. tag
     )
-    local algorithm, checksum = response:match('"digest"%s*:%s*"(%w+):(%x+)"')
+    local checksum = response:match('"digest"%s*:%s*"%w+:(%x+)"')
 
     if not checksum then
         error("Failed to obtain checksum")
     end
 
-    return algorithm, checksum
+    return checksum
 end
 
 -- Obtains statically linked binary from GitHub releases and places binary
