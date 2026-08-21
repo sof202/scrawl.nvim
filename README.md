@@ -29,8 +29,17 @@ require("scrawl").setup()
 ```lua
 require("scrawl").setup({
   keymaps = {
-    markdown_insert = "<leader>mi"
-  }
+      markdown_insert = "<leader>mi"
+  },
+  window_opts = {
+      -- Uses scrawl's defaults
+      height = nil,
+      width = nil,  
+  },
+  markdown_opts = {
+      height = 300,
+      width = 300,
+  },
 })
 ```
 
