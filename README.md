@@ -33,3 +33,16 @@ require("scrawl").setup({
   }
 })
 ```
+
+## Uninstalling
+
+scrawl.nvim will download the `scrawl` binary to 
+`vim.fn.stdpath(data)/scrawl.nvim/` (likely 
+`$HOME/.local/share/nvim/scrawl.nvim/`). Remove this directory to completely
+clean an installation.
+
+One way you could do this is by running (in neovim):
+
+```
+:lua vim.fn.delete(vim.fn.stdpath(data).."/scrawl.nvim", "rf")
+```
