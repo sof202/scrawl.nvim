@@ -1,4 +1,22 @@
+local config = require("scrawl.config")
+
 local M = {}
+
+--- @param binary_location string
+--- @param output_path string
+local function scrawl_cmd(binary_location, output_path)
+    local scrawl_cmd = {}
+    table.insert(scrawl_cmd, { binary_location, output_path })
+    local window_height = config.opts.window_opts.height
+    local window_width = config.opts.window_opts.width
+    if window_height ~= nil then
+        table.insert(scrawl_cmd, { "-h", window_height })
+    end
+    if window_width ~= nil then
+        table.insert(scrawl_cmd, { "-w", window_width })
+    end
+    return unpack(scrawl_cmd)
+end
 
 --- @param binary_location string
 local function execute_scrawl(binary_location)
@@ -16,12 +34,18 @@ local function execute_scrawl(binary_location)
 
     local alt_text = vim.fn.fnamemodify(picture_path, ":t")
 
-    vim.fn.system({ binary_location, picture_path })
+    vim.fn.system(scrawl_cmd(binary_location, picture_path))
 
     -- Pressing ESC in scrawl results in no image being saved
     if vim.fn.filereadable(picture_path) == 1 then
         vim.api.nvim_paste(
-            string.format("![%s](%s)", alt_text, picture_path),
+            string.format(
+                '<img src="%s" alt="%s" width=%s height=%s>',
+                picture_path,
+                alt_text,
+                config.opts.markdown_opts.width,
+                config.opts.markdown_opts.height
+            ),
             false,
             -1
         )
@@ -29,7 +53,6 @@ local function execute_scrawl(binary_location)
 end
 
 function M.setup()
-    local config = require("scrawl.config")
     local paths = require("scrawl.paths")
 
     vim.api.nvim_create_autocmd("FileType", {

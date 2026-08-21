@@ -3,7 +3,15 @@ local M = {}
 M.defaults = {
     keymaps = {
         markdown_insert = "<leader>mi"
-    }
+    },
+    window_opts = {
+        height = nil,
+        width = nil,
+    },
+    markdown_opts = {
+        height = 300,
+        width = 300,
+    },
 }
 
 M.opts = {}
